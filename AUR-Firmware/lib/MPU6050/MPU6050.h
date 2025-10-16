@@ -28,13 +28,13 @@ public:
     void configureAccel(uint16_t range);
 
     // sensor data
-    void getGyroData(int16_t *gx, int16_t *gy, int16_t *gz);
-    void getAccelData(int16_t *ax, int16_t *ay, int16_t *az);
+    void getGyroData(float *gx, float *gy, float *gz);
+    void getAccelData(float *ax, float *ay, float *az);
 
     // orientation
-    float getPitch(int16_t ax, int16_t ay, int16_t az);
-    float getRoll(int16_t ax, int16_t ay, int16_t az);
-    float getYaw(int16_t ax, int16_t ay, int16_t az);
+    float getPitch(float ax, float ay, float az);
+    float getRoll(float ax, float ay, float az);
+    float getYaw(float ax, float ay, float az);
 };
 
 #endif // MPU6050_H

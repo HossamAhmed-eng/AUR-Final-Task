@@ -51,41 +51,51 @@ void MPU::configureAccel(uint16_t range)
     Wire.endTransmission();
 }
 
-void MPU::getGyroData(int16_t *gx, int16_t *gy, int16_t *gz)
+void MPU::getGyroData(float *gx, float *gy, float *gz)
 {
     Wire.beginTransmission(addr);
     Wire.write(REG_GYRO_XOUT_H);
     Wire.endTransmission(false);
 
     Wire.requestFrom(addr, 6, true);
-    *gx = (Wire.read() << 8) | Wire.read();
-    *gy = (Wire.read() << 8) | Wire.read();
-    *gz = (Wire.read() << 8) | Wire.read();
-}
 
-void MPU::getAccelData(int16_t *ax, int16_t *ay, int16_t *az)
+    int16_t rawX = (Wire.read() << 8) | Wire.read();
+    int16_t rawY = (Wire.read() << 8) | Wire.read();
+    int16_t rawZ = (Wire.read() << 8) | Wire.read();
+
+    *gx = (float)rawX;
+    *gy = (float)rawY;
+    *gz = (float)rawZ;
+}
+void MPU::getAccelData(float *ax, float *ay, float *az)
 {
     Wire.beginTransmission(addr);
     Wire.write(REG_ACCEL_XOUT_H);
     Wire.endTransmission(false);
 
     Wire.requestFrom(addr, 6, true);
-    *ax = (Wire.read() << 8) | Wire.read();
-    *ay = (Wire.read() << 8) | Wire.read();
-    *az = (Wire.read() << 8) | Wire.read();
+
+    int16_t rawX = (Wire.read() << 8) | Wire.read();
+    int16_t rawY = (Wire.read() << 8) | Wire.read();
+    int16_t rawZ = (Wire.read() << 8) | Wire.read();
+
+    *ax = (float)rawX;
+    *ay = (float)rawY;
+    *az = (float)rawZ;
 }
 
-float MPU::getPitch(int16_t ax, int16_t ay, int16_t az)
+
+float MPU::getPitch(float ax, float ay, float az)
 {
-    return atan2(ax, sqrt(ay * ay + az * az)) * 180.0 / PI;
+    return atan2(-ax, sqrt(ay*ay + az*az)) * 180.0 / PI;
 }
 
-float MPU::getRoll(int16_t ax, int16_t ay, int16_t az)
+float MPU::getRoll(float ax, float ay, float az)
 {
-    return atan2(ay, sqrt(ax * ax + az * az)) * 180.0 / PI;
+    return atan2(ay, az) * 180.0 / PI;
 }
 
-float MPU::getYaw(int16_t ax, int16_t ay, int16_t az)
+float MPU::getYaw(float ax, float ay, float az)
 {
     return atan2(sqrt(ax * ax + ay * ay), az) * 180.0 / PI;
 }
