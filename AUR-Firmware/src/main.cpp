@@ -1,7 +1,6 @@
 // main.cpp
 #include <Arduino.h>
 #include <MPU6050.h>
-
 MPU mpu; //init
 
 
@@ -18,12 +17,43 @@ extern "C" void app_main(void)
         vTaskDelay(1);
     }
 }
+float x,y,theta; 
+float wheelbase=0; //placeholder
+float wheelradius=0; //placeholder
+int TICKS_PER_REV=0; //placeholder
+volatile long leftTicks=0, rightTicks=0;
+void encoderTask(void *pvParameters)
+{
+    static long prevLeftTicks = 0;
+    static long prevRightTicks = 0;
+    while(true){
+        long L=leftTicks;
+        long R=rightTicks;
+        long dL = L - prevLeftTicks;
+        long dR = R - prevRightTicks;
+        prevLeftTicks=L;
+        prevRightTicks=R;
+        float dSL=(dL*2*3.14159*wheelradius)/TICKS_PER_REV;
+        float dSR=(dR*2*3.14159*wheelradius)/TICKS_PER_REV;
+        float dS=(dSL+dSR)/2.0;
+        float dTheta=(dSR - dSL)/wheelbase;
+    }
+}
+
 void setup()
 {
     Serial.begin(115200);
     mpu.init(0x68);         // MPU6050 default I2C address
     mpu.configureGyro(250); // ±250 dps
     mpu.configureAccel(2);  // ±2g
+    /*xTaskCreate(
+        encoderTask,   
+        "EncoderTask", 
+        2048,          
+        NULL,          
+        1,             
+        NULL           
+    );*/
 }
 
 void loop()
