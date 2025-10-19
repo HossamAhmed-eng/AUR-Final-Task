@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <MPU6050.h>
 MPU mpu; //init
-
+// #include "kalman_filter.h"
 
 void setup();
 void loop();
@@ -21,6 +21,7 @@ float x,y,theta;
 float wheelbase=0; //placeholder
 float wheelradius=0; //placeholder
 int TICKS_PER_REV=0; //placeholder
+// KalmanFilter filter(wheelradius, wheelbase, TICKS_PER_REV);
 volatile long leftTicks=0, rightTicks=0;
 void encoderTask(void *pvParameters)
 {
@@ -54,6 +55,11 @@ void setup()
         1,             
         NULL           
     );*/
+
+    /*
+    filter.begin();
+    filter.setPosition(0, 0, 0);
+    */
 }
 
 void loop()
@@ -76,6 +82,23 @@ void loop()
     Serial.printf("Gyro  [°/s]: X=%.2f, Y=%.2f, Z=%.2f\n", gx_dps, gy_dps, gz_dps);
     Serial.printf("Pitch: %.2f deg, Roll: %.2f deg\n", pitch, roll);
     Serial.println("----------------------");
+    /*
+    float left_ticks = readLeftEncoder();
+    float right_ticks = readRightEncoder();
+    float dt = 0.1;
+
+    filter.update(left_ticks, right_ticks, dt);
+
+    float x, y, heading;
+    filter.getPosition(x, y, heading);
+
+    Serial.print("Position: X=");
+    Serial.print(x);
+    Serial.print(" Y=");
+    Serial.print(y);
+    Serial.print(" Heading=");
+    Serial.println(heading);
+    */
 
     delay(100);
 }
