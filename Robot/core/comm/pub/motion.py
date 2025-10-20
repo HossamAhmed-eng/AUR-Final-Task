@@ -12,23 +12,23 @@ def on_connect(client, userdata, flags, reason_code, properties):
         
 
 client.on_connect = on_connect
-client.connect("localhost", 1883)
+client.connect("192.168.4.2", 1883)
 client.loop_start()
 
 def press(key):
     print(f" Key pressed: {key}")
     if key in ["up", "down", "left", "right"]:
         client.publish(f"robot/movement/{key}", "start moving")
-        print(f" 📡 Published to robot/movement/{key}")
+        print(f" Published to robot/movement/{key}")
     elif key == "space":
         client.publish("robot/stop", "stop moving")
-        print(" 📡 Published to robot/stop")
+        print(" Published to robot/stop")
     elif key == "o":
         client.publish("robot/gripper/open", "open gripper")
-        print(" 📡 Published to robot/gripper/open")
+        print(" Published to robot/gripper/open")
     elif key == "c":
         client.publish("robot/gripper/close", "close gripper")
-        print(" 📡 Published to robot/gripper/close")
+        print("  Published to robot/gripper/close")
 
 def release(key):
     pass
