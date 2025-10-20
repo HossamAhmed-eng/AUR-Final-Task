@@ -78,31 +78,33 @@ class CameraWidget(QWidget):
             pixmap.scaled(
                 self.label.width(),
                 self.label.height(),
-                Qt.KeepAspectRatio, # type: ignore
+                Qt.IgnoreAspectRatio, # type: ignore
                 Qt.SmoothTransformation # type: ignore
             )
         )
+       
 
     def _show_placeholder(self):
         """Display a static placeholder image or text when the camera is off."""
         placeholder_path = os.path.join(os.path.dirname(__file__), "pic.jpg")
-        cat_img = cv2.imread(placeholder_path)
+        pic_img = cv2.imread(placeholder_path)
 
-        if cat_img is None:
+        if pic_img is None:
             self.label.setText("Camera Off")
             return
 
-        cat_img = cv2.cvtColor(cat_img, cv2.COLOR_BGR2RGB)
-        h, w, ch = cat_img.shape
+        pic_img = cv2.cvtColor(pic_img, cv2.COLOR_BGR2RGB)
+        h, w, ch = pic_img.shape
         bytes_per_line = ch * w
-        qimage = QImage(cat_img.data, w, h, bytes_per_line, QImage.Format_RGB888) # type: ignore
+        qimage = QImage(pic_img.data, w, h, bytes_per_line, QImage.Format_RGB888) # type: ignore
         pixmap = QPixmap.fromImage(qimage)
 
         self.label.setPixmap(
             pixmap.scaled(
                 self.label.width(),
                 self.label.height(),
-                Qt.KeepAspectRatio, # type: ignore
+                Qt.IgnoreAspectRatio, # type: ignore
                 Qt.SmoothTransformation # type: ignore
             )
         )
+        
