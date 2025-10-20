@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout
-from PySide6.QtCore import Qt, Slot, QTimer
+from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QFont
-import Robot.core.comm.client as mqtt
 
 class CoordinatesDisplay(QWidget):
     
@@ -12,7 +11,7 @@ class CoordinatesDisplay(QWidget):
         self._coords_label.setAlignment(Qt.AlignLeft) # type: ignore
         self._coords_label.setFont(QFont("Consolas", 14, QFont.Bold)) # type: ignore
 
-        self._status_label = QLabel("Checking connection...")
+        self._status_label = QLabel("Trying to connect...")
         self._status_label.setAlignment(Qt.AlignRight) # type: ignore
         self._status_label.setStyleSheet("color: blue; font-size: 13px;")
         
@@ -32,6 +31,4 @@ class CoordinatesDisplay(QWidget):
        if connected:
            self._status_label.setText("✅ Connected To The Robot")
            self._status_label.setStyleSheet("color: green; font-size: 13px;")
-       else:
-            self._status_label.setText("❌ Robot Not Connected")
-            self._status_label.setStyleSheet("color: red; font-size: 13px;")
+      
