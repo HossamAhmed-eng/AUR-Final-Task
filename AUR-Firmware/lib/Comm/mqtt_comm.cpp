@@ -52,8 +52,15 @@ void MQTTComm::reconnect()
         if (client.connect("ESP32Client"))
         {
             Serial.println("connected");
-            client.subscribe("esp32/#");
-            Serial.println("Subscribed to topic: esp32/#");
+           // client.subscribe("esp32/#");
+            client.subscribe("robot/movement/up");
+            client.subscribe("robot/movement/down");
+            client.subscribe("robot/movement/left");
+            client.subscribe("robot/movement/right");
+            client.subscribe("robot/movement/stop");
+            client.subscribe("robot/gripper/open");
+            client.subscribe("robot/gripper/close");
+            Serial.println("Subscribed to topic: robot/movement/");
         }
         else
         {

@@ -1,6 +1,7 @@
 #include "pid.h"
 #include "Arduino.h"
 #include "float.h"
+#include <math.h>
 
 #define clamp(v, l, h) (min(max(v, l), h))
 
