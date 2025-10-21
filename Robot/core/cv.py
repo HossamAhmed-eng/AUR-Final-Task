@@ -1,14 +1,14 @@
 import cv2
-from threading import Thread
+from threading import Thread, Lock
 from time import sleep
 
 class Camera:
-    
     def __init__(self, index: int = 1):
         self._index = index
         self._cap = None
         self._is_open = False
         self._frame = None
+        self._frame_lock = Lock()  # Add thread safety
         self._running = False
         self._thread = None
 
@@ -43,7 +43,8 @@ class Camera:
         while self._running and self._cap:
             success, frame = self._cap.read()
             if success:
-                self._frame = frame
+                with self._frame_lock:
+                    self._frame = frame
             else:
                 # Try to reopen if frame capture fails
                 sleep(0.5)
@@ -54,7 +55,8 @@ class Camera:
     @property
     def frame(self):
         """Return the most recent frame captured."""
-        return self._frame
+        with self._frame_lock:
+            return self._frame.copy() if self._frame is not None else None
 
     @property
     def is_open(self) -> bool:

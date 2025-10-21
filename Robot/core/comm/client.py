@@ -21,11 +21,12 @@ def _on_connect(client, userdata, flags, reason_code, properties):
     else:
         subscribe.callback(coords.callback, 'robot/coordinates')
         print("connected to mqtt broker and subscribed to: robot/coordinates")
+def setup(callback=None):
+    print("MQTT connection skipped for GUI testing.")
 
-
-def setup(coords_slot, address = "192.168.4.2", port = 1883):
-    coords.slot = coords_slot
-    _mqttc.on_connect = _on_connect
-    _mqttc.connect(address, port)
-    _mqttc.loop_start()
+# def setup(coords_slot, address = "192.168.4.2", port = 1883):
+#     coords.slot = coords_slot
+#     _mqttc.on_connect = _on_connect
+#     _mqttc.connect(address, port)
+#     _mqttc.loop_start()
    

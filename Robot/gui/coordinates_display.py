@@ -7,18 +7,35 @@ class CoordinatesDisplay(QWidget):
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
 
-        self._coords_label = QLabel("X: 0 , Y: 0", self)
-        self._coords_label.setAlignment(Qt.AlignLeft) # type: ignore
-        self._coords_label.setFont(QFont("Consolas", 14, QFont.Bold)) # type: ignore
+        # Title
+        self._title_label = QLabel("Current Position")
+        self._title_label.setAlignment(Qt.AlignCenter)
+        self._title_label.setFont(QFont("Arial", 12, QFont.Bold))
+        self._title_label.setStyleSheet("color: #2E86AB; background-color: #F0F8FF; padding: 5px; border-radius: 5px;")
 
+        #  Coordinates Display 
+        self._coords_label = QLabel("X: 0.00 , Y: 0.00")
+        self._coords_label.setAlignment(Qt.AlignCenter)
+        self._coords_label.setFont(QFont("Consolas", 14, QFont.Bold))
+        self._coords_label.setStyleSheet("""
+            background-color: #F0F8FF; 
+            padding: 8px; 
+            border: 2px solid #2E86AB;
+            border-radius: 8px;
+            color: #2E86AB;
+        """)
+
+        # Status Label
         self._status_label = QLabel("Trying to connect...")
-        self._status_label.setAlignment(Qt.AlignRight) # type: ignore
-        self._status_label.setStyleSheet("color: blue; font-size: 13px;")
+        self._status_label.setAlignment(Qt.AlignCenter)
+        self._status_label.setStyleSheet("color: #666; font-size: 12px; font-style: italic;")
         
         layout = QVBoxLayout(self)
+        layout.addWidget(self._title_label)
         layout.addWidget(self._coords_label)
         layout.addWidget(self._status_label)
         layout.setContentsMargins(5, 5, 5, 5)
+        layout.setSpacing(8)
         self.setLayout(layout)
 
     @Slot()
@@ -30,5 +47,4 @@ class CoordinatesDisplay(QWidget):
     def update_connection_status(self, connected: bool):
        if connected:
            self._status_label.setText("✅ Connected To The Robot")
-           self._status_label.setStyleSheet("color: green; font-size: 13px;")
-      
+           self._status_label.setStyleSheet("color: #228B22; font-size: 12px; font-weight: bold;")
