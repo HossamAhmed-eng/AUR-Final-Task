@@ -24,7 +24,7 @@ def _on_connect(client, userdata, flags, reason_code, properties):
         client.message_callback_add("robot/coordinates", coords.callback)
         print("Connected to MQTT broker and subscribed to: robot/coordinates")
 
-def setup(coords_slot, address="192.168.4.2", port=1883):
+def setup(coords_slot, address="localhost", port=1883):
     coords.slot = coords_slot
     _mqttc.on_connect = _on_connect
     _mqttc.connect(address, port)
