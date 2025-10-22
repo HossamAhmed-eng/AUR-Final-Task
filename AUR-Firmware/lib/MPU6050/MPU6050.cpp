@@ -3,7 +3,7 @@
 void MPU::init(uint8_t address)
 {
     addr = address;
-    Wire.begin();
+    Wire.begin(4,16);
     Wire.setClock(400000); // Fast I2C mode
 
     // Wake up the MPU6050 (it starts in sleep mode)

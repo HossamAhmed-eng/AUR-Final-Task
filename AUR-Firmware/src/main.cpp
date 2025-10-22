@@ -4,15 +4,14 @@
 #include <ESP32Encoder.h>
 #include <kalman_filter.h>
 #include <mqtt_comm.h>
-#include <motor.h>
+#include <motortest.h>
 #include <gripper.h>
 MPU mpu; // init
 // Motors
 //left motor = direction1
 //right motor = direction2
 Gripper gripper(12, 0, 90); // pin, openAngle, closeAngle
-Motor leftMotor(21, 22, 19, 0, 5000, 8);   // pwmPin, dir1, dir2, channel, freq, resolution
-Motor rightMotor(19, 23, 5, 1, 5000, 8);
+
 //
 //----------Encoders----------
 ESP32Encoder leftEncoder;
@@ -21,10 +20,11 @@ const int leftEncoderA = 34;
 const int leftEncoderB = 35;
 const int rightEncoderA = 2;
 const int rightEncoderB = 15;
-float wheelbase = 0;
-float wheelradius = 0;
-int TICKS_PER_REV = 0;
+float wheelbase = 28.4; // in cm
+float wheelradius = 32.5; // in mm
+int TICKS_PER_REV = 900;
 KalmanFilter filter(wheelradius, wheelbase, TICKS_PER_REV);
+MotorDriver motors(22, 18, 19, 23, 5, 21); // in1,  in2,  ena,  in3,  in4,  enb
 //----------------------------
 //----------WiFi and MQTT Settings----------
 MQTTComm mqtt("ESPRobot", "123456789", "192.168.4.2");
@@ -44,30 +44,6 @@ extern "C" void app_main(void)
         vTaskDelay(1);
     }
 }
-void moveForward() {
-    leftMotor.setSpeed(80);
-    rightMotor.setSpeed(80);
-}
-
-void moveBackward() {
-    leftMotor.setSpeed(-80);
-    rightMotor.setSpeed(-80);
-}
-
-void turnLeft() {
-    leftMotor.setSpeed(-70);
-    rightMotor.setSpeed(70);
-}
-
-void turnRight() {
-    leftMotor.setSpeed(70);
-    rightMotor.setSpeed(-70);
-}
-
-void stopMotors() {
-    leftMotor.stop();
-    rightMotor.stop();
-}
 
 void callback(char *topic, byte *message, unsigned int length)
 {
@@ -80,43 +56,58 @@ void callback(char *topic, byte *message, unsigned int length)
     Serial.print("Message: ");
     Serial.println(msg);
 
-    if (String(topic) == "robot/movement/up")
-    {
-        Serial.println("⬆️ Moving Forward");
-        moveForward();
-    }
-    else if (String(topic) == "robot/movement/down")
-    {
-        Serial.println("⬇️ Moving Backward");
-        moveBackward();
-    }
-    else if (String(topic) == "robot/movement/left")
-    {
-        Serial.println("⬅️ Turning Left");
-        turnLeft();
-    }
-    else if (String(topic) == "robot/movement/right")
-    {
-        Serial.println("➡️ Turning Right");
-        turnRight();
-    }
-    else if (String(topic) == "robot/stop")
-    {
-        Serial.println("🛑 Stop Moving");
-        stopMotors();
-    }
-    else if (String(topic) == "robot/gripper/open")
-    {
-        Serial.println("👐 Opening Gripper");
-        // gripperOpen();
-    }
-    else if (String(topic) == "robot/gripper/close")
-    {
-        Serial.println("✊ Closing Gripper");
-        // gripperClose();
-    }
+     if (String(topic) == "robot/movement/up")
+     {
+         Serial.println("⬆️ Moving Forward");
+         motors.moveForward();
+         motors.setTargetRPM(150, 150);
+         motors.update();
+     }
+     else if (String(topic) == "robot/movement/down")
+     {
+         Serial.println("⬇️ Moving Backward");
+         motors.moveBackward();
+         motors.update();
+     }
+     else if (String(topic) == "robot/movement/left")
+     {
+         Serial.println("⬅️ Turning Left");
+         motors.turnLeft();
+         motors.update();
+     }
+     else if (String(topic) == "robot/movement/right")
+     {
+         Serial.println("➡️ Turning Right");
+         motors.turnRight();
+         motors.update();
+     }
+     else if (String(topic) == "robot/stop")
+     {
+         Serial.println("🛑 Stop Moving");
+         motors.stopMotors();
+         //motors.update();
+     }
+     else if (String(topic) == "robot/gripper/open")
+     {
+         Serial.println("👐 Opening Gripper");
+         // gripperOpen();
+         gripper.open();
+     }
+     else if (String(topic) == "robot/gripper/close")
+     {
+         Serial.println("✊ Closing Gripper");
+         // gripperClose();
+         gripper.close();
+     }
 }
-
+const int IN3 = 22;
+const int IN4 = 19;
+const int ENB = 21;
+const int freq = 1000;    // PWM frequency (Hz)
+const int pwmChannel = 0; // choose 0–15 (ESP32 supports 16 channels)
+const int resolution = 8;
+int last_left,last_right;
+unsigned long last_time=0;
 void setup()
 {
     Serial.begin(115200);
@@ -124,11 +115,12 @@ void setup()
     mpu.configureGyro(250); // ±250 dps
     mpu.configureAccel(2);  // ±2g
     // Motor initialization
-    leftMotor.init();
-    rightMotor.init();
+    //motors.begin();
+    motors.begin(34, 35, 34, 35, 330.0); // leftEncA, leftEncB, rightEncA, rightEncB, ticksPerRev
     // Kalman Filter Initialization
-    filter.begin();
-    filter.setPosition(0, 0, 0);
+    //filter.begin();
+    //filter.setPosition(0, 0, 0);
+    gripper.init();
     // Encoder Initialization
     leftEncoder.attachFullQuad(leftEncoderA, leftEncoderB);
     rightEncoder.attachFullQuad(rightEncoderA, rightEncoderB);
@@ -137,27 +129,67 @@ void setup()
     // WiFi and MQTT Initialization
     mqtt.begin();
     mqtt.setCallback(callback);
+    
 }
 
 void loop()
 {
+     float gx, gy, gz;
+  mpu.getGyroData(&gx, &gy, &gz);
+    Serial.printf("Gyro: %.2f %.2f %.2f\n", gx, gy, gz);
+
     // Kalman Filter stuff ---------
     float left_ticks = leftEncoder.getCount();
     float right_ticks = rightEncoder.getCount();
+    Serial.print("Left Encoder Ticks: ");
+    Serial.print(left_ticks);
+    Serial.print(" | Right Encoder Ticks: ");
+    Serial.println(right_ticks);
+    /* motors.setTargetRPM(150, 150); // move forward
+     motors.update();
+
+     // Example stop after 5s
+     if (millis() > 5000)
+         motors.stop();
+*/
+
     // float leftRevs = (float)left_ticks / TICKS_PER_REV;
     // float rightRevs = (float)right_ticks / TICKS_PER_REV;
-    float dt = 0.1;
-    filter.update(left_ticks, right_ticks, dt);
-    float x, y, heading;
-    filter.getPosition(x, y, heading);
-   /* Serial.print("Position: X=");
+    int current_left = leftEncoder.getCount();
+    int current_right = rightEncoder.getCount();
+
+    float delta_left = current_left - last_left;
+    float delta_right = current_right - last_right;
+
+    float dt = (millis() - last_time) / 1000.0; // seconds
+
+filter.update(delta_left, delta_right, dt);
+
+last_left = current_left;
+last_right = current_right;
+last_time = millis();
+float x, y, heading;
+filter.getPosition(x, y, heading);
+    Serial.print("Position: X=");
     Serial.print(x);
     Serial.print(" Y=");
     Serial.print(y);
     Serial.print(" Heading=");
-    Serial.println(heading);*/
+    Serial.println(heading);
+/*
+    float dt = 0.1;
+    filter.update(left_ticks, left_ticks, dt);
+    float x, y, heading;
+    filter.getPosition(x, y, heading);
+    Serial.print("Position: X=");
+    Serial.print(x);
+    Serial.print(" Y=");
+    Serial.print(y);
+    Serial.print(" Heading=");
+    Serial.println(heading);
     //-----------------------------
     // MQTT stuff
+  */  
     mqtt.loop();
 
     long now = millis();
