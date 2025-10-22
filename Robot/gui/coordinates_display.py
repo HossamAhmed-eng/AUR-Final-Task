@@ -9,14 +9,14 @@ class CoordinatesDisplay(QWidget):
 
         # Title
         self._title_label = QLabel("Current Position")
-        self._title_label.setAlignment(Qt.AlignCenter)
-        self._title_label.setFont(QFont("Arial", 12, QFont.Bold))
+        self._title_label.setAlignment(Qt.AlignCenter) # type: ignore
+        self._title_label.setFont(QFont("Arial", 12, QFont.Bold)) # type: ignore
         self._title_label.setStyleSheet("color: #2E86AB; background-color: #F0F8FF; padding: 5px; border-radius: 5px;")
 
         #  Coordinates Display 
         self._coords_label = QLabel("X: 0.00 , Y: 0.00")
-        self._coords_label.setAlignment(Qt.AlignCenter)
-        self._coords_label.setFont(QFont("Consolas", 14, QFont.Bold))
+        self._coords_label.setAlignment(Qt.AlignCenter) # type: ignore
+        self._coords_label.setFont(QFont("Consolas", 14, QFont.Bold)) # type: ignore
         self._coords_label.setStyleSheet("""
             background-color: #F0F8FF; 
             padding: 8px; 
@@ -27,7 +27,7 @@ class CoordinatesDisplay(QWidget):
 
         # Status Label
         self._status_label = QLabel("Trying to connect...")
-        self._status_label.setAlignment(Qt.AlignCenter)
+        self._status_label.setAlignment(Qt.AlignCenter) # type: ignore
         self._status_label.setStyleSheet("color: #666; font-size: 12px; font-style: italic;")
         
         layout = QVBoxLayout(self)
