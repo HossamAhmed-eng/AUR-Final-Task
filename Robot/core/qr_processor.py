@@ -41,12 +41,11 @@ class QRWorker(QThread):
         while self.active:
             self.mutex.lock()
             should_process = self.is_processing and self.frame_available
-            frame = self.current_frame.copy() if self.frame_available else None
+            frame = self.current_frame.copy() if self.frame_available else None # type: ignore
             self.mutex.unlock()
             
             if frame is not None and should_process:
                 try:
-                    # USE YOUR EXACT LOGIC
                     processed_frame = self.process_frame(frame)
                     self.frame_processed.emit(processed_frame)
                         
@@ -62,40 +61,33 @@ class QRWorker(QThread):
         try:
             decoded_text, points, _ = self.detector.detectAndDecode(frame)
 
-            #  ADDED: Validate points before processing
             if points is not None:
                 points = points[0].astype(int)
                 
-                #  ADDED: Check if points have valid area (fixes the error)
                 if len(points) < 3:
                     return frame
                     
-                # Calculate area of the polygon
                 area = cv2.contourArea(points)
                 if area <= 0:
                     return frame
 
-                #  ADDED: Only process if it's a coordinate QR code
                 if decoded_text and 'X=' in decoded_text and 'Y=' in decoded_text:
                     print(f" Processing coordinate QR: {decoded_text}")
                     
-                    # draw green outline - YOUR ORIGINAL CODE
+                    # draw green outline
                     for i in range(len(points)):
                         cv2.line(frame, tuple(points[i]), tuple(points[(i + 1) % len(points)]), (0, 255, 0), 2)
 
-                    # check green background - YOUR ORIGINAL CODE
-                    if not self.background_is_green(frame, points):
-                        cv2.putText(frame, "Ignored (Fake QR Box)", (points[0][0], points[0][1] - 10),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-                        self.last_text = ""
-                        
-                        # ADDED: Print fake QR detection
-                        print(f"❌ FAKE QR: Coordinate QR on wrong color - {decoded_text}")
-                        self.qr_ignored.emit("Fake QR - Wrong color")
-                        
-                        return frame
+                    # --- COMMENTED OUT: fake QR detection ---
+                    # if not self.background_is_green(frame, points):
+                    #     cv2.putText(frame, "Ignored (Fake QR Box)", (points[0][0], points[0][1] - 10),
+                    #                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+                    #     self.last_text = ""
+                    #     print(f"❌ FAKE QR: Coordinate QR on wrong color - {decoded_text}")
+                    #     self.qr_ignored.emit("Fake QR - Wrong color")
+                    #     return frame
+                    # ---------------------------------------
 
-                    # Handle decoded text - YOUR ORIGINAL CODE
                     if decoded_text and decoded_text != self.last_text:
                         self.last_text = decoded_text
                         print(f"Decoded QR Code before parsing: {decoded_text}")
@@ -105,46 +97,43 @@ class QRWorker(QThread):
                             x = float(parsed["X"][0])
                             y = float(parsed["Y"][0])
                             print(f"Decoded QR Code after parsing: {x} , {y}")
-                            
-                            # ADDED: Emit signal instead of winsound
                             self.qr_detected.emit(decoded_text, x, y)
                             
                         except Exception as e:
                             print(f"Could not parse QR content: {e}")
                             self.qr_ignored.emit("Invalid QR format")
 
-                    # Display decoded text - YOUR ORIGINAL CODE
                     cv2.putText(frame, decoded_text, (points[0][0], points[0][1] - 10),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
                 else:
-                    # ADDED: Silently ignore non-coordinate QR codes
                     self.last_text = ""
             else:
                 self.last_text = ""
 
         except Exception as e:
-            #  ADDED: Catch any OpenCV errors and continue
             print(f"QR detection error (continuing): {e}")
             
         return frame
 
-    def background_is_green(self, frame, points, margin=10, green_threshold=1.3):
-        try:
-            x_min = max(int(np.min(points[:, 0])) - margin, 0)
-            x_max = min(int(np.max(points[:, 0])) + margin, frame.shape[1])
-            y_min = max(int(np.min(points[:, 1])) - margin, 0)
-            y_max = min(int(np.max(points[:, 1])) + margin, frame.shape[0])
+    # --- COMMENTED OUT: background color check (used for fake QR detection) ---
+    # def background_is_green(self, frame, points, margin=10, green_threshold=1.3):
+    #     try:
+    #         x_min = max(int(np.min(points[:, 0])) - margin, 0)
+    #         x_max = min(int(np.max(points[:, 0])) + margin, frame.shape[1])
+    #         y_min = max(int(np.min(points[:, 1])) - margin, 0)
+    #         y_max = min(int(np.max(points[:, 1])) + margin, frame.shape[0])
 
-            region = frame[y_min:y_max, x_min:x_max]
-            if region.size == 0:
-                return False
+    #         region = frame[y_min:y_max, x_min:x_max]
+    #         if region.size == 0:
+    #             return False
 
-            avg_color = np.mean(region, axis=(0, 1))
-            blue, green, red = avg_color
-            return green > green_threshold * ((red + blue) / 2)
-        except Exception as e:
-            print(f"Background color check error: {e}")
-            return False
+    #         avg_color = np.mean(region, axis=(0, 1))
+    #         blue, green, red = avg_color
+    #         return green > green_threshold * ((red + blue) / 2)
+    #     except Exception as e:
+    #         print(f"Background color check error: {e}")
+    #         return False
+    # --------------------------------------------------------------------------
 
     def stop(self):
         """Stop the worker thread safely"""

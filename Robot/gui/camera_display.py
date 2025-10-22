@@ -25,16 +25,16 @@ class CameraWidget(QWidget):
 
         #  UI Elements 
         self.label = QLabel()
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(Qt.AlignCenter) # type: ignore
         self.label.setStyleSheet("background-color: black;")
-        self.label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding) # type: ignore
 
         self.start_btn = QPushButton("Start Camera")
         self.qr_btn = QPushButton("Start QR Scanning")
         self.qr_btn.setEnabled(False)
         
         self.info_label = QLabel("Status: Camera OFF | QR Scanning: OFF")
-        self.info_label.setAlignment(Qt.AlignCenter)
+        self.info_label.setAlignment(Qt.AlignCenter) # type: ignore
         self.info_label.setStyleSheet("font-size: 14px; color: gray;")
 
         #  Layout
@@ -208,15 +208,15 @@ class CameraWidget(QWidget):
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             h, w, ch = frame_rgb.shape
             bytes_per_line = ch * w
-            qimage = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888)
+            qimage = QImage(frame_rgb.data, w, h, bytes_per_line, QImage.Format_RGB888) # type: ignore
             pixmap = QPixmap.fromImage(qimage)
 
             self.label.setPixmap(
                 pixmap.scaled(
                     self.label.width(),
                     self.label.height(),
-                    Qt.IgnoreAspectRatio,
-                    Qt.SmoothTransformation
+                    Qt.IgnoreAspectRatio, # type: ignore
+                    Qt.SmoothTransformation # type: ignore
                 )
             )
         except Exception as e:
@@ -255,15 +255,15 @@ class CameraWidget(QWidget):
             pic_img = cv2.cvtColor(pic_img, cv2.COLOR_BGR2RGB)
             h, w, ch = pic_img.shape
             bytes_per_line = ch * w
-            qimage = QImage(pic_img.data, w, h, bytes_per_line, QImage.Format_RGB888)
+            qimage = QImage(pic_img.data, w, h, bytes_per_line, QImage.Format_RGB888) # type: ignore
             pixmap = QPixmap.fromImage(qimage)
 
             self.label.setPixmap(
                 pixmap.scaled(
                     self.label.width(),
                     self.label.height(),
-                    Qt.IgnoreAspectRatio,
-                    Qt.SmoothTransformation
+                    Qt.IgnoreAspectRatio, # type: ignore
+                    Qt.SmoothTransformation # type: ignore
                 )
             )
         except Exception:
