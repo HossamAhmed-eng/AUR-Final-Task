@@ -19,6 +19,47 @@ class QRWorker(QThread):
         self.active = True
         self.frame_available = False
         
+    def detect_color(self, frame):
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    
+        lower_red = np.array([100, 0, 0])
+        upper_red = np.array([255, 80, 80])
+    
+        lower_green = np.array([0, 100, 0])
+        upper_green = np.array([80, 255, 80])
+    
+        lower_blue = np.array([0, 0, 100])
+        upper_blue = np.array([80, 80, 255])
+    
+        mask_red = cv2.inRange(rgb, lower_red, upper_red)
+        mask_green = cv2.inRange(rgb, lower_green, upper_green)
+        mask_blue = cv2.inRange(rgb, lower_blue, upper_blue)
+
+        # 🔹 ADD THIS: Morphological filtering to clean up noise
+        kernel = np.ones((5, 5), np.uint8)
+        mask_red = cv2.morphologyEx(mask_red, cv2.MORPH_OPEN, kernel)
+        mask_red = cv2.morphologyEx(mask_red, cv2.MORPH_CLOSE, kernel)
+
+        mask_green = cv2.morphologyEx(mask_green, cv2.MORPH_OPEN, kernel)
+        mask_green = cv2.morphologyEx(mask_green, cv2.MORPH_CLOSE, kernel)
+
+        # Then count nonzero pixels
+        red_pixels = cv2.countNonZero(mask_red)
+        green_pixels = cv2.countNonZero(mask_green)
+        blue_pixels = cv2.countNonZero(mask_blue)
+
+    
+        threshold = 500
+    
+        if red_pixels > threshold:
+            return "red"
+        elif green_pixels > threshold:
+            return "green"
+        elif blue_pixels > threshold:
+            return "blue"
+        else:
+            return "unknown"
+        
     def set_processing(self, enabled: bool):
         self.mutex.lock()
         self.is_processing = enabled
@@ -70,6 +111,14 @@ class QRWorker(QThread):
                 area = cv2.contourArea(points)
                 if area <= 0:
                     return frame
+                
+                if self.detect_color(frame) !="blue":
+                    cv2.putText(frame, "Ignored (Fake QR Box)", (points[0][0], points[0][1] - 10),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+                    self.last_text = ""
+                    print(f"❌ FAKE QR: Coordinate QR on wrong color - {decoded_text}")
+                    self.qr_ignored.emit("Fake QR - Wrong color")
+                    return frame
 
                 if decoded_text and 'X=' in decoded_text and 'Y=' in decoded_text:
                     print(f" Processing coordinate QR: {decoded_text}")
@@ -78,16 +127,7 @@ class QRWorker(QThread):
                     for i in range(len(points)):
                         cv2.line(frame, tuple(points[i]), tuple(points[(i + 1) % len(points)]), (0, 255, 0), 2)
 
-                    # --- COMMENTED OUT: fake QR detection ---
-                    # if not self.background_is_green(frame, points):
-                    #     cv2.putText(frame, "Ignored (Fake QR Box)", (points[0][0], points[0][1] - 10),
-                    #                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-                    #     self.last_text = ""
-                    #     print(f"❌ FAKE QR: Coordinate QR on wrong color - {decoded_text}")
-                    #     self.qr_ignored.emit("Fake QR - Wrong color")
-                    #     return frame
-                    # ---------------------------------------
-
+                    
                     if decoded_text and decoded_text != self.last_text:
                         self.last_text = decoded_text
                         print(f"Decoded QR Code before parsing: {decoded_text}")
@@ -114,27 +154,7 @@ class QRWorker(QThread):
             print(f"QR detection error (continuing): {e}")
             
         return frame
-
-    # --- COMMENTED OUT: background color check (used for fake QR detection) ---
-    # def background_is_green(self, frame, points, margin=10, green_threshold=1.3):
-    #     try:
-    #         x_min = max(int(np.min(points[:, 0])) - margin, 0)
-    #         x_max = min(int(np.max(points[:, 0])) + margin, frame.shape[1])
-    #         y_min = max(int(np.min(points[:, 1])) - margin, 0)
-    #         y_max = min(int(np.max(points[:, 1])) + margin, frame.shape[0])
-
-    #         region = frame[y_min:y_max, x_min:x_max]
-    #         if region.size == 0:
-    #             return False
-
-    #         avg_color = np.mean(region, axis=(0, 1))
-    #         blue, green, red = avg_color
-    #         return green > green_threshold * ((red + blue) / 2)
-    #     except Exception as e:
-    #         print(f"Background color check error: {e}")
-    #         return False
-    # --------------------------------------------------------------------------
-
+    
     def stop(self):
         """Stop the worker thread safely"""
         self.active = False
