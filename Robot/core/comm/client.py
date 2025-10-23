@@ -13,6 +13,8 @@ _mqttc = MC(CallbackAPIVersion.VERSION2)
 # stop topic: 'robot/stop'
 # open gripper topic: 'robot/gripper/open'
 # close gripper topic: 'robot/gripper/close'
+# gripper up topic: 'robot/gripper/up'
+# gripper down topic: 'robot/gripper/down'
 # --------broker: '192.168.4.2'--------
 #-----------port: 1883----------
 
