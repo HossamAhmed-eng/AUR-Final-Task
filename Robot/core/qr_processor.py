@@ -183,4 +183,4 @@ class QRProcessor(QObject):
         try:
             self.worker.stop()
         except Exception as e:
-            print(f"Error stopping QR processor: {e}")
+            print(f"Error stopping QR processors: {e}")
