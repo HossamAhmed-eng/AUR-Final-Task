@@ -1,56 +1,48 @@
 #include "encoder.h"
-#include "Arduino.h"
-static Encoder* encoders[2] = {nullptr, nullptr};
 
-//interrupt handlers
-void IRAM_ATTR handleEncoderA0() {
-    if (encoders[0] == nullptr) return;
-    int b = digitalRead(encoders[0]->pinB);
-    if (b == HIGH){  // forward
-        encoders[0]->count++;
-        encoders[0]->direction = 1;  
-     } 
-    else{ // backward
-        encoders[0]->count--;
-        encoders[0]->direction =-1;  
-}}
-
-void IRAM_ATTR handleEncoderA1() {
-    if (encoders[1] == nullptr) return;
-    int b = digitalRead(encoders[1]->pinB);
-    if (b == HIGH){// forward
-        encoders[1]->count++;
-      encoders[1]->direction = 1;
-       }   
-    else{  // backward
-        encoders[1]->count--;
-        encoders[1]->direction = -1;   
-}}
-
-//class
 Encoder::Encoder(int pinA, int pinB)
-    : pinA(pinA), pinB(pinB), count(0), lastCount(0), lastTime(0), speed(0) {}
+    : pinA(pinA), pinB(pinB),
+      lastA(0), lastB(0),
+      count(0), lastCount(0),
+      lastTime(0), speed(0), direction(0) {}
 
-void Encoder::init(uint8_t index) {
+void Encoder::init() {
     pinMode(pinA, INPUT_PULLUP);
     pinMode(pinB, INPUT_PULLUP);
-    encoders[index] = this;
-    if (index == 0)
-        attachInterrupt(digitalPinToInterrupt(pinA), handleEncoderA0, RISING);
-    else if (index == 1)
-        attachInterrupt(digitalPinToInterrupt(pinA), handleEncoderA1, RISING);
-    lastTime = micros();  //microseconds
+    lastA = digitalRead(pinA);
+    lastB = digitalRead(pinB);
+    lastTime = micros();
 }
 
 void Encoder::update() {
+    int currentA = digitalRead(pinA);
+    int currentB = digitalRead(pinB);
+
+    // detect change in A or B
+    if (currentA != lastA || currentB != lastB) {
+        // determine direction
+        if (currentA == currentB)
+            count++;
+        else
+            count--;
+
+        // direction
+        direction = (count >= lastCount) ? 1 : -1;
+        lastCount = count;
+    }
+
+    // calculate speed every 50ms
     unsigned long now = micros();
     float dt = (now - lastTime) / 1e6;
-    if (dt >= 0.05) { //50ms
+    if (dt >= 0.05) { // 50ms
         long diff = count - lastCount;
         speed = diff / dt;
-        lastCount = count;
         lastTime = now;
+        lastCount = count;
     }
+
+    lastA = currentA;
+    lastB = currentB;
 }
 
 long Encoder::getCount() const {
@@ -65,11 +57,13 @@ float Encoder::getSpeed(float counts_per_rev) {
 float Encoder::getPosition(float counts_per_rev) {
     return (count / counts_per_rev) * 360.0; // degrees
 }
+
 float Encoder::getRPM(float counts_per_rev) {
     float rev_per_sec = speed / counts_per_rev;
     rpmValue = rev_per_sec * 60.0;
     return rpmValue;
 }
+
 int Encoder::getDirection() const {
     return direction;
 }

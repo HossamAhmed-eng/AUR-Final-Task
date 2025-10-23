@@ -33,7 +33,7 @@ bool KalmanFilter::begin(uint8_t mpu_addr)
 void KalmanFilter::update(float left_ticks, float right_ticks, float dt)
 {
     float gx, gy, gz;
-    mpu.getGyroData(&gx, &gy, &gz);
+    mpu.getCalibratedGyroData(&gx, &gy, &gz);
 
     float left_dist = (left_ticks / ticks_per_rev) * (2 * M_PI * wheel_radius);
     float right_dist = (right_ticks / ticks_per_rev) * (2 * M_PI * wheel_radius);

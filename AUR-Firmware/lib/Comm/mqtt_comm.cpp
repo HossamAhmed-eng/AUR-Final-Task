@@ -59,6 +59,8 @@ void MQTTComm::reconnect()
             client.subscribe("robot/movement/right");
             client.subscribe("robot/stop");
             client.subscribe("robot/gripper/open");
+            client.subscribe("robot/gripper/up");
+            client.subscribe("robot/gripper/down");
             client.subscribe("robot/gripper/close");
             Serial.println("Subscribed to topic: robot/movement/");
         }
