@@ -55,13 +55,13 @@ class TargetCoordsDisplay(QWidget):
 
     @Slot(str)
     def update_status(self, status: str):
-        #"""Update status message"""
-        #if "Fake QR" in status:
-        #    self._status_label.setText("❌ Fake QR - Wrong color box")
-        #    self._status_label.setStyleSheet("color: #DC143C; font-size: 12px; font-weight: bold;")
-        #elif "Invalid QR" in status:
-        #    self._status_label.setText("❌ Invalid QR format")
-        #    self._status_label.setStyleSheet("color: #FF8C00; font-size: 12px; font-weight: bold;")
-        #else:
-        self._status_label.setText(status)
-        self._status_label.setStyleSheet("color: #666; font-size: 12px;")
+        """Update status message"""
+        if "Fake QR" in status:
+            self._status_label.setText("❌ Fake QR - Wrong color box")
+            self._status_label.setStyleSheet("color: #DC143C; font-size: 12px; font-weight: bold;")
+        elif "Invalid QR" in status:
+            self._status_label.setText("❌ Invalid QR format")
+            self._status_label.setStyleSheet("color: #FF8C00; font-size: 12px; font-weight: bold;")
+        else:
+            self._status_label.setText(status)
+            self._status_label.setStyleSheet("color: #666; font-size: 12px;")
