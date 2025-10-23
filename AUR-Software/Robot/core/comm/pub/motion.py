@@ -25,6 +25,12 @@ class PressHandler:
             elif key == "c":
                 self.mqtt_client.publish("robot/gripper/close", "close gripper")
                 print("Gripper closed")
+            elif key == "u":
+                self.mqtt_client.publish("robot/gripper/up","gripper up")
+                print("Gripper up")
+            elif key =="d":
+                self.mqtt_client.publish("robot/gripper/down","gripper down")
+                print("Gripper down")
 
             else:
                 print(f"Unmapped key: {key}")
