@@ -11,9 +11,8 @@ class CoordinateMap(QWidget):
         self.latest_point = None
 
     def mark_point(self, x, y, color=QColor("red")):
-        """Update the current position to show only one point."""
         self.latest_point = (x, y, color)
-        self.update()  # trigger redraw
+        self.update()  #trigger redraw
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -21,7 +20,7 @@ class CoordinateMap(QWidget):
         width = self.width()
         height = self.height()
 
-        # draw grid lines
+        #draw grid lines
         pen = QPen(QColor(220, 220, 220))
         painter.setPen(pen)
         for gx in range(0, width, self.grid_size):
@@ -29,14 +28,14 @@ class CoordinateMap(QWidget):
         for gy in range(0, height, self.grid_size):
             painter.drawLine(0, gy, width, gy)
 
-        # draw axes
+        #draw axes
         pen.setColor(Qt.GlobalColor.black)
         pen.setWidth(2)
         painter.setPen(pen)
         painter.drawLine(0, 0, width, 0)
         painter.drawLine(0, 0, 0, height)
 
-        # draw axis labels
+        #draw axis labels
         painter.setFont(QFont("Arial", 10))
         painter.setPen(Qt.GlobalColor.black)
         label_interval = 5
@@ -51,7 +50,7 @@ class CoordinateMap(QWidget):
             py = height - i
             painter.drawText(4, py + 4, str(label_val))
 
-        # ✅ Draw only the latest point
+        #draw only the latest point
         if self.latest_point:
             x, y, color = self.latest_point
             painter.setPen(QPen(color, 4))
@@ -60,3 +59,4 @@ class CoordinateMap(QWidget):
             draw_y = height - (y * self.grid_size)
             r = 8
             painter.drawEllipse(draw_x - r, draw_y - r, r * 2, r * 2)
+
