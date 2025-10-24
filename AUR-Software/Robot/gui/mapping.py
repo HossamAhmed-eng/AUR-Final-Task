@@ -12,7 +12,7 @@ class CoordinateMap(QWidget):
 
     def mark_point(self, x, y, color=QColor("red")):
         self.latest_point = (x, y, color)
-        self.update()  #trigger redraw
+        self.update()  # trigger redraw
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -20,43 +20,46 @@ class CoordinateMap(QWidget):
         width = self.width()
         height = self.height()
 
-        #draw grid lines
+        max_coord = 4  # only 0 to 4
+        step = width / max_coord  # adjust so that 4 fills the entire width
+        self.grid_size = step
+
+        # draw grid lines
         pen = QPen(QColor(220, 220, 220))
         painter.setPen(pen)
-        for gx in range(0, width, self.grid_size):
+        for i in range(max_coord + 1):
+            gx = i * step
+            gy = i * step
             painter.drawLine(gx, 0, gx, height)
-        for gy in range(0, height, self.grid_size):
             painter.drawLine(0, gy, width, gy)
 
         #draw axes
         pen.setColor(Qt.GlobalColor.black)
         pen.setWidth(2)
         painter.setPen(pen)
-        painter.drawLine(0, 0, width, 0)
-        painter.drawLine(0, 0, 0, height)
+        painter.drawLine(0, height, width, height)  # x axis
+        painter.drawLine(0, 0, 0, height)           # y axis
 
-        #draw axis labels
+        # draw axis labels
         painter.setFont(QFont("Arial", 10))
         painter.setPen(Qt.GlobalColor.black)
-        label_interval = 5
-        label_step = label_interval * self.grid_size
+        for i in range(max_coord + 1):
+            # x labels
+            x_label = str(i)
+            painter.drawText(i * step + 2, height - 4, x_label)
+            # y labels
+            y_label = str(i)
+            py = height - i * step
+            painter.drawText(4, py - 4, y_label)
 
-        for px in range(label_step, width, label_step):
-            label_val = px // self.grid_size
-            painter.drawText(px + 2, height - 4, str(label_val))
-
-        for i in range(label_step, height + 1, label_step):
-            label_val = i // self.grid_size
-            py = height - i
-            painter.drawText(4, py + 4, str(label_val))
-
-        #draw only the latest point
+        # draw only the latest point
         if self.latest_point:
             x, y, color = self.latest_point
             painter.setPen(QPen(color, 4))
             painter.setBrush(color)
-            draw_x = x * self.grid_size
-            draw_y = height - (y * self.grid_size)
+            draw_x = x * step
+            draw_y = height - (y * step)
             r = 8
             painter.drawEllipse(draw_x - r, draw_y - r, r * 2, r * 2)
+
 
