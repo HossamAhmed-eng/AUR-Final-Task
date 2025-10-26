@@ -5,7 +5,6 @@ Gripper::Gripper(int servoPin, int openAngle, int closeAngle)
 
 void Gripper::init() {
     servo.attach(servoPin);
-    close(); // Start in closed position
 }
 
 void Gripper::open() {

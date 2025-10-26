@@ -4,7 +4,7 @@ from time import sleep
 
 class Camera:
     def __init__(self, index: int = 1):
-        self._index = index
+        self._index = "http://192.168.1.7:8080/video"
         self._cap = None
         self._is_open = False
         self._frame = None

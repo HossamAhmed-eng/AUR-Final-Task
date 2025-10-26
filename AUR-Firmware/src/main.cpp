@@ -3,29 +3,29 @@
 #include <ESP32Encoder.h>
 #include <kalman_filter.h>
 #include <mqtt_comm.h>
-#include <motortest.h>
+#include <motordriver.h>
 #include <gripper.h>
 
 
 // Objects
 
 MPU mpu;
-Gripper arm(12, 0, 180);
-Gripper gripper(13, 0 ,77);
+Gripper arm(13, 180,80); //pin,open,close
+Gripper gripper(12, 110 ,77);
 
 ESP32Encoder leftEncoder;
 ESP32Encoder rightEncoder;
-const int leftEncoderA = 34;
-const int leftEncoderB = 35;
-const int rightEncoderA = 2;
-const int rightEncoderB = 15;
+const int leftEncoderA = 35;
+const int leftEncoderB = 34;
+const int rightEncoderA = 15;
+const int rightEncoderB = 2;
 
 float wheelbase = 28.4; // cm
-float wheelradius = 32.5; // mm
+float wheelradius = 3.25; // cm
 int TICKS_PER_REV = 900;
 KalmanFilter filter(wheelradius, wheelbase, TICKS_PER_REV);
 
-MotorDriver motors(22, 18, 19, 23, 5, 21);
+    MotorDriver motors(23,5, 19, 22, 18, 21);//direction 2 = right
 
 MQTTComm mqtt("ESPRobot", "123456789", "192.168.4.2");
 
@@ -51,26 +51,26 @@ void callback(char *topic, byte *message, unsigned int length)
     {
         Serial.println("⬆️ Moving Forward");
         motors.moveForward();
-        motors.setTargetRPM(150, 150);
-        motors.update();
+        //motors.setTargetRPM(150, 150);
+        //motors.update();
     }
     else if (String(topic) == "robot/movement/down")
     {
         Serial.println("⬇️ Moving Backward");
         motors.moveBackward();
-        motors.update();
+        //motors.update();
     }
     else if (String(topic) == "robot/movement/left")
     {
         Serial.println("⬅️ Turning Left");
         motors.turnLeft();
-        motors.update();
+        //motors.update();
     }
     else if (String(topic) == "robot/movement/right")
     {
         Serial.println("➡️ Turning Right");
         motors.turnRight();
-        motors.update();
+        //motors.update();
     }
     else if (String(topic) == "robot/stop")
     {
@@ -80,18 +80,20 @@ void callback(char *topic, byte *message, unsigned int length)
     else if (String(topic) == "robot/gripper/open")
     {
         Serial.println("👐 Opening Gripper");
-        arm.open();
+        gripper.open();
     }
     else if (String(topic) == "robot/gripper/close")
     {
         Serial.println("✊ Closing Gripper");
-        arm.close();
+        gripper.close();
     }
     else if(String(topic)=="robot/gripper/up"){
         Serial.print("Box up");
+        arm.close();
     }
     else if(String(topic)=="robot/gripper/down"){
         Serial.print("Box down");
+        arm.open();
     }
 }
 
@@ -102,14 +104,19 @@ void TaskSensors(void *pvParameters)
 {
     for (;;)
     {
-        gripper.close();
-        float gx, gy, gz;
-        mpu.getGyroData(&gx, &gy, &gz);
-        //Serial.printf("Gyro: %.2f %.2f %.2f\n", gx, gy, gz);
+        //arm.close();
+        //gripper.close();
+        //gripper.close();
+       float gx, gy, gz;
+  mpu.getCalibratedGyroData(&gx, &gy, &gz);
+    Serial.printf("Gyro: %.2f %.2f %.2f\n", gx, gy, gz);
+
+
 
         int current_left = leftEncoder.getCount(); // need to be in a different task
         int current_right = rightEncoder.getCount();
-
+        Serial.print(current_left);
+        Serial.println(current_right);
         float delta_left = current_left - last_left;
         float delta_right = current_right - last_right;
         float dt = (millis() - last_time) / 1000.0;
@@ -139,11 +146,12 @@ void TaskMQTT(void *pvParameters)
         if (now - lastMsg > 1000)
         {
             lastMsg = now;
-            float xx = random(0, 100) / 10.0;
-            float yy = random(0, 100) / 10.0;
+            float x, y, heading;
+            filter.getPosition(x, y, heading);
+            
 
             char msg[64];
-            sprintf(msg, "%.2f,%.2f", xx, yy);
+            sprintf(msg, "%.2f,%.2f", x, y);
             mqtt.publish("robot/coordinates", msg);
         }
 
@@ -164,8 +172,8 @@ void setup()
     mpu.configureAccel(2);
 
     // Motors
-    motors.begin(34, 35, 34, 35, 330.0);
-
+   // motors.begin(34, 35, 34, 35, 330.0);
+    motors.begin();
     // Gripper
     arm.init();
     gripper.init();

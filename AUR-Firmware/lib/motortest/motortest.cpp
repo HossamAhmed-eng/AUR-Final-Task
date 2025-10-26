@@ -6,8 +6,8 @@ MotorDriver::MotorDriver(int in1, int in2, int ena, int in3, int in4, int enb)
       ticksPerRev(0),
       targetLeftRPM(0), targetRightRPM(0),
       lastUpdate(0), prevLeftTicks(0), prevRightTicks(0),
-      leftPID(1.0, 0.3, 0.05, 255),
-      rightPID(1.0, 0.3, 0.05, 255) {}
+      leftPID(1.0, 0.3, 0.05, 280),
+      rightPID(1.0, 0.3, 0.05, 280) {}
 
 void MotorDriver::begin(int leftEncA, int leftEncB, int rightEncA, int rightEncB, float ticksPerRev)
 {
@@ -70,12 +70,12 @@ void MotorDriver::stop()
 
 void MotorDriver::moveForward()
 {
-    setTargetRPM(150, 150);
+    setTargetRPM(280, 280);
 }
 
 void MotorDriver::moveBackward()
 {
-    setTargetRPM(-150, -150);
+    setTargetRPM(-280, -280);
 }
 
 void MotorDriver::turnLeft()

@@ -42,7 +42,7 @@ void KalmanFilter::update(float left_ticks, float right_ticks, float dt)
     float encoder_turn = (right_dist - left_dist) / wheel_base;
     float imu_turn = gz * dt;
 
-    float fused_turn = (encoder_turn * 1 + imu_turn * 0);
+    float fused_turn = (encoder_turn * 0.7 + imu_turn * 0.3);
 
     heading += fused_turn;
     pos_x += distance * cos(heading);
